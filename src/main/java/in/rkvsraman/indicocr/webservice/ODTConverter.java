@@ -101,7 +101,7 @@ public class ODTConverter implements Callable<String> {
 		x_factor = page.getImageWidth() / a4_width_in_cm;
 		y_factor = page.getImageHeight() / a4_height_in_cm;
 
-		System.out.println("Factors:" + x_factor + " " + y_factor);
+//		System.out.println("Factors:" + x_factor + " " + y_factor);
 
 		Paragraph para1 = outputOdt.addParagraph("");
 
@@ -117,7 +117,7 @@ public class ODTConverter implements Callable<String> {
 
 			File f = File.createTempFile("temp", ".png");
 
-			System.out.println(f.getAbsolutePath());
+//			System.out.println(f.getAbsolutePath());
 
 			ImageIO.write(tempImage, "png", f);
 
@@ -150,13 +150,14 @@ public class ODTConverter implements Callable<String> {
 				f.setSize((textLine.getAHeight() / y_factor) / point_to_centimeter);
 				tempPara.setFont(f);
 
-				System.out.println(textLine.getText() + " " + rectangle.getXDesc() + " " + rectangle.getYDesc());
+//				System.out.println(textLine.getText() + " " + rectangle.getXDesc() + " " + rectangle.getYDesc());
 			}
 
 		}
 
 		File odtFile = File.createTempFile("OCTOutput", ".odt");
 		outputOdt.save(odtFile.getAbsolutePath());
+		System.out.println("Output file is :" + odtFile.getAbsolutePath());
 		return odtFile.getAbsolutePath();
 
 	}
@@ -174,7 +175,7 @@ public class ODTConverter implements Callable<String> {
 				y_Min = image.getYMin();
 		}
 
-		System.out.println("Reduce Y = " + y_Min);
+//		System.out.println("Reduce Y = " + y_Min);
 		reduce_y = y_Min;
 
 	}
@@ -201,9 +202,9 @@ public class ODTConverter implements Callable<String> {
 
 		yMin -= reduce_y;
 		yMax -= reduce_y;
-		System.out.println(xMin + " " + yMin + " " + (xMax - xMin) + " " + (yMax - yMin));
-		System.out.println(xMin / x_factor + " " + yMin / y_factor + " " + (xMax - xMin) / x_factor + " "
-				+ (yMax - yMin) / y_factor);
+//		System.out.println(xMin + " " + yMin + " " + (xMax - xMin) + " " + (yMax - yMin));
+//		System.out.println(xMin / x_factor + " " + yMin / y_factor + " " + (xMax - xMin) / x_factor + " "
+//				+ (yMax - yMin) / y_factor);
 		return new FrameRectangle(xMin / x_factor, yMin / y_factor, (xMax - xMin) / x_factor, (yMax - yMin) / y_factor,
 				SupportedLinearMeasure.CM);
 

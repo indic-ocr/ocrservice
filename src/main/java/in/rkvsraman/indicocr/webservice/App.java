@@ -55,7 +55,10 @@ public class App extends AbstractVerticle {
 		router.get("/").handler(routingContext -> {
 			HttpServerResponse response = routingContext.response();
 			response.putHeader("content-type", "text/html")
-					.end("<h1>Indic - OCR Service</h1> <h2> By RKVS Raman</h2> ");
+					.end("<html><body><h1>Indic OCR Service</h1><form action=\"/ocr\" ENCTYPE=\"multipart/form-data\" method=\"POST\" >"
+							+ "choose a file to upload:<input type=\"file\" name=\"myfile\"/><br>"
+							+ "<input type=\"text\" name=\"lang\" placeholder=\"eng\">" + " <input type=\"submit\"/>"
+							+ "</form> </body></html>");
 		});
 
 		router.post("/ocr").handler(this::getAll);
@@ -85,13 +88,15 @@ public class App extends AbstractVerticle {
 			filePath = f.uploadedFileName();
 			break;
 		}
-		File f = new File(filePath);
-		String mimetype = new MimetypesFileTypeMap().getContentType(f);
-		String type = mimetype.split("/")[0];
-		if (!type.equals("image")) {
-			routingContext.response().end("Uploaded file is not an image.\n");
-			return;
-		}
+		// File f = new File(filePath);
+		//
+		// String mimetype = new MimetypesFileTypeMap().getContentType(f);
+		// String type = mimetype.split("/")[0];
+		// System.out.println("Mimetype: "+mimetype + " for " + filePath);
+		// if (!type.equals("image")) {
+		// routingContext.response().end("Uploaded file is not an image.\n");
+		// return;
+		// }
 
 		String lang = routingContext.request().getFormAttribute("lang");
 		if (lang == null || lang.length() == 0) {
@@ -121,6 +126,7 @@ public class App extends AbstractVerticle {
 			return;
 		}
 		command.addArguments(filePath + " " + outputfile.getAbsolutePath() + " --ocr-lang " + lang);
+		System.out.println("Command is:" + command.toString());
 
 		ExecuteWatchdog watchDog = new ExecuteWatchdog(30000); // Not more than
 																// 30 seconds
@@ -128,7 +134,7 @@ public class App extends AbstractVerticle {
 		DefaultExecutor executor = new DefaultExecutor();
 		executor.setWatchdog(watchDog);
 
-		ScriboHandler handler = new ScriboHandler(routingContext, filePath, outputfile, watchDog, command,lang);
+		ScriboHandler handler = new ScriboHandler(routingContext, filePath, outputfile, watchDog, command, lang);
 
 		try {
 			executor.execute(command, handler);
@@ -141,6 +147,7 @@ public class App extends AbstractVerticle {
 			e.printStackTrace();
 			return;
 		}
+		System.out.println("Conversion to xml started...");
 
 	}
 
