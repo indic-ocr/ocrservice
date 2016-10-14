@@ -145,7 +145,7 @@ public class ODTConverter implements Callable<String> {
 				tBox.getStyleHandler().setHorizontalRelative(HorizontalRelative.PAGE);
 				tBox.getStyleHandler().setVerticalRelative(VerticalRelative.PAGE);
 
-				Paragraph tempPara = tBox.addParagraph(textLine.getText());
+				Paragraph tempPara = tBox.addParagraph(OCRPostProcessor.getProcessedString(language, textLine.getText()));
 				Font f = tempPara.getFont();
 				f.setSize((textLine.getAHeight() / y_factor) / point_to_centimeter);
 				tempPara.setFont(f);
