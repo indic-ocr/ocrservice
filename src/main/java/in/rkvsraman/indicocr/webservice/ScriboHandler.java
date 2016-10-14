@@ -56,7 +56,9 @@ public class ScriboHandler implements ExecuteResultHandler {
 	@Override
 	public void onProcessFailed(ExecuteException exception) {
 		if(watchDog.killedProcess()){
+			System.out.println("It is more than 30 seconds now");
 			context.response().end("Conversion took more than  30 seconds. Aborting...\n");
+			exception.printStackTrace();
 		}
 		else
 		{
