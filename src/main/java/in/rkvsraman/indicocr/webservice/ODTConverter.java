@@ -89,6 +89,8 @@ public class ODTConverter implements Callable<String> {
 		OdfStylePageLayout pageLayoutStyle = defaultPage.getAutomaticStyles().getPageLayout(pageLayoutName);
 		PageLayoutProperties pageLayoutProperties = PageLayoutProperties
 				.getOrCreatePageLayoutProperties(pageLayoutStyle);
+		//a4_height_in_cm = a4_width_in_cm * (bi.getHeight()/bi.getWidth()) *10;
+				
 		pageLayoutProperties.setPageHeight(a4_height_in_cm * 10);
 		pageLayoutProperties.setPageWidth(a4_width_in_cm * 10);
 		pageLayoutProperties.setPrintOrientation(PrintOrientation.PORTRAIT);
@@ -146,8 +148,11 @@ public class ODTConverter implements Callable<String> {
 				tBox.getStyleHandler().setVerticalRelative(VerticalRelative.PAGE);
 
 				Paragraph tempPara = tBox.addParagraph(OCRPostProcessor.getProcessedString(language, textLine.getText()));
+				
 				Font f = tempPara.getFont();
-				f.setSize((textLine.getAHeight() / y_factor) / point_to_centimeter);
+				f.setFamilyName("Noto Sans Malayalam");
+			//	f.setSize((textLine.getAHeight() / y_factor) / point_to_centimeter);
+				System.out.println("Font size:" + (textLine.getAHeight() / y_factor) / point_to_centimeter);
 				tempPara.setFont(f);
 
 //				System.out.println(textLine.getText() + " " + rectangle.getXDesc() + " " + rectangle.getYDesc());

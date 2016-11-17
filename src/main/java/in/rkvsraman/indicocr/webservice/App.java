@@ -1,15 +1,20 @@
 package in.rkvsraman.indicocr.webservice;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.imageio.ImageIO;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
 
+import Catalano.Imaging.FastBitmap;
+import Catalano.Imaging.Filters.BradleyLocalThreshold;
+import Catalano.Imaging.Filters.Grayscale;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
@@ -63,6 +68,8 @@ public class App extends AbstractVerticle {
 
 		router.post("/ocr").handler(this::getAll);
 
+		router.post("/india").handler(this::getIndia);
+
 		// Create the HTTP server and pass the "accept" method to the request
 		// handler.
 		vertx.createHttpServer().requestHandler(router::accept).listen(
@@ -86,6 +93,7 @@ public class App extends AbstractVerticle {
 		for (FileUpload f : routingContext.fileUploads()) {
 
 			filePath = f.uploadedFileName();
+			System.out.println("Filepath:" + filePath);
 			break;
 		}
 		// File f = new File(filePath);
@@ -99,6 +107,7 @@ public class App extends AbstractVerticle {
 		// }
 
 		String lang = routingContext.request().getFormAttribute("lang");
+		System.out.println("Lang:" + lang);
 		if (lang == null || lang.length() == 0) {
 			routingContext.response().end("No language specified.\n");
 			return;
@@ -110,6 +119,107 @@ public class App extends AbstractVerticle {
 		}
 
 		convertToODTAndSend(routingContext, filePath, lang);
+
+	}
+
+	private void getIndia(RoutingContext routingContext) {
+
+		if (routingContext.fileUploads().size() < 1) {
+			routingContext.response().end("No file attached.\n");
+			return;
+		}
+		String filePath = new String();
+		for (FileUpload f : routingContext.fileUploads()) {
+
+			filePath = f.uploadedFileName();
+			System.out.println("Filepath:" + filePath);
+			break;
+		}
+		// File f = new File(filePath);
+		//
+		// String mimetype = new MimetypesFileTypeMap().getContentType(f);
+		// String type = mimetype.split("/")[0];
+		// System.out.println("Mimetype: "+mimetype + " for " + filePath);
+		// if (!type.equals("image")) {
+		// routingContext.response().end("Uploaded file is not an image.\n");
+		// return;
+		// }
+
+		String sourcelang = routingContext.request().getFormAttribute("sourcelang");
+		String tolang = routingContext.request().getFormAttribute("tolang");
+		System.out.println("Lang:" + sourcelang + " " + tolang);
+		if (sourcelang == null || sourcelang.length() == 0) {
+			routingContext.response().end("No source language specified.\n");
+			return;
+		}
+		if (tolang == null || tolang.length() == 0) {
+			routingContext.response().end("No destination language specified.\n");
+			return;
+		}
+
+		if (filePath.length() < 0) {
+			routingContext.response().end("Could not retrieve uploaded file.\n");
+			return;
+		}
+
+		binarizeAndRecognize(routingContext, filePath, sourcelang, tolang);
+
+	}
+
+	private void binarizeAndRecognize(RoutingContext routingContext, String filePath, String sourcelang,
+			String tolang) {
+
+		try {
+			BufferedImage image = ImageIO.read(new File(filePath));
+
+			FastBitmap fbm = new FastBitmap(image);
+
+			Grayscale gray = new Grayscale();
+
+			gray.applyInPlace(fbm);
+
+			BradleyLocalThreshold bt = new BradleyLocalThreshold();
+			bt.applyInPlace(fbm);
+
+			File tempImageFile = File.createTempFile("indiafile", ".png");
+
+			ImageIO.write(fbm.toBufferedImage(), "png", tempImageFile);
+
+			String recognizedtext = "recoed" + System.currentTimeMillis();
+
+			CommandLine tessCommand = new CommandLine("tesseract");
+			tessCommand.addArguments(tempImageFile.getAbsolutePath() + " " + recognizedtext + " -l " + sourcelang);
+
+			System.out.println("Command is:" + tessCommand.toString());
+
+			ExecuteWatchdog watchDog = new ExecuteWatchdog(30000); // Not more
+																	// than
+																	// 30
+																	// seconds
+
+			DefaultExecutor executor = new DefaultExecutor();
+			executor.setWatchdog(watchDog);
+
+			TessHandler handler = new TessHandler(routingContext, tempImageFile.getAbsolutePath(), recognizedtext,
+					watchDog, tessCommand, sourcelang, tolang);
+
+			executor.execute(tessCommand, handler);
+
+		} catch (ExecuteException e) {
+			routingContext.response().end("Some problem in intermediate process.\n");
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			routingContext.response().end("IO Exception in intermediate process.\n");
+			e.printStackTrace();
+			return;
+		}
+
+		catch (Exception e) {
+			routingContext.response().end("Could not complete the request\n");
+			e.printStackTrace();
+			return;
+		}
 
 	}
 

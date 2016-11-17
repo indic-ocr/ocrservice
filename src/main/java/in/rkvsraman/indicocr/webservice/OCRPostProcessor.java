@@ -13,29 +13,28 @@ import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 
-public class OCRPostProcessor  {
+public class OCRPostProcessor {
 
 	static HashMap<String, TreeMap<String, String>> postProcessMap = new HashMap<String, TreeMap<String, String>>();
-	
-	
-	public static void main(String args[]) throws Exception{
-		
-		if(args.length != 2){
+
+	public static void main(String args[]) throws Exception {
+
+		if (args.length != 2) {
 			System.out.println("Usage: java in.rkvsraman.indicocr.webservice.OCRPostProcessor fileName lang");
 			System.exit(1);
-			
+
 		}
-		
+
 		File f = new File(args[0]);
-		
-		
-		List<String> list = IOUtils.readLines(new FileReader(f));//, Charset.forName("UTF-16"));
-		
+
+		List<String> list = IOUtils.readLines(new FileReader(f));// ,
+																	// Charset.forName("UTF-16"));
+
 		StringBuffer sb = new StringBuffer();
-		for(String s : list){
+		for (String s : list) {
 			sb.append(getProcessedString(args[1], s));
 		}
-		
+
 		System.out.println(sb.toString());
 	}
 
@@ -53,7 +52,7 @@ public class OCRPostProcessor  {
 				Properties p = new Properties();
 				try {
 					p.load(ins);
-					map = new TreeMap<String,String>();
+					map = new TreeMap<String, String>();
 					for (String s : p.stringPropertyNames()) {
 
 						map.put(s, p.getProperty(s));
@@ -71,15 +70,20 @@ public class OCRPostProcessor  {
 			}
 
 		}
-		
-		String replacedText = new String(text);
-		for(String s: map.descendingKeySet()){
-			
-			//System.out.println(s);
-			replacedText = replacedText.replaceAll(s, map.get(s));
+		if (map == null) {
+			return text;
 		}
+		if (text != null) {
+			String replacedText = new String(text);
+			for (String s : map.descendingKeySet()) {
 
-		return replacedText;
+				// System.out.println(s);
+				replacedText = replacedText.replaceAll(s, map.get(s));
+			}
+
+			return replacedText;
+		}
+		return null;
 	}
 
 }
