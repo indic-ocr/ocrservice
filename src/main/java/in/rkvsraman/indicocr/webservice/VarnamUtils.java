@@ -40,8 +40,10 @@ public class VarnamUtils {
 
 			for (String s : langcodes.stringPropertyNames()) {
 
+				if (s.equals("eng"))
+					continue;
 				Varnam locVarnam = new Varnam("/usr/local/share/varnam/vst/" + langcodes.getProperty(s) + ".vst");
-				locVarnam.enableSuggestions("learnings.varnam" + langcodes.getProperty(s));
+				locVarnam.enableSuggestions("learnings.varnam." + langcodes.getProperty(s));
 				varnamMap.put(s, locVarnam);
 
 			}
@@ -64,11 +66,11 @@ public class VarnamUtils {
 				int conf = 0;
 				String tWord = "";
 				for (Word word : words) {
-					if(word.getConfidence() > conf){
+					if (word.getConfidence() > conf) {
 						conf = word.getConfidence();
 						tWord = word.getText();
 					}
-					
+
 				}
 				return tWord;
 			} catch (VarnamException e) {

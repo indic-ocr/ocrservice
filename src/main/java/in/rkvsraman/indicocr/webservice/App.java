@@ -3,6 +3,8 @@ package in.rkvsraman.indicocr.webservice;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.imageio.ImageIO;
@@ -170,49 +172,48 @@ public class App extends AbstractVerticle {
 			String tolang) {
 
 		try {
-			BufferedImage image = ImageIO.read(new File(filePath));
+			ExecutorService service = Executors.newSingleThreadExecutor();
+			BinaryImageConverter bin = new BinaryImageConverter(routingContext, filePath, sourcelang, tolang);
+			AcrossIndiaTask ait = new AcrossIndiaTask(routingContext, filePath, sourcelang, tolang, bin);
+			service.execute(ait);
+			System.out.println("Transliterating..");
+			/*
+			 * BufferedImage image = ImageIO.read(new File(filePath));
+			 * 
+			 * FastBitmap fbm = new FastBitmap(image);
+			 * 
+			 * Grayscale gray = new Grayscale();
+			 * 
+			 * gray.applyInPlace(fbm);
+			 * 
+			 * BradleyLocalThreshold bt = new BradleyLocalThreshold();
+			 * bt.applyInPlace(fbm);
+			 * 
+			 * File tempImageFile = File.createTempFile("indiafile", ".png");
+			 * 
+			 * ImageIO.write(fbm.toBufferedImage(), "png", tempImageFile);
+			 * 
+			 * String recognizedtext = "recoed" + System.currentTimeMillis();
+			 * 
+			 * CommandLine tessCommand = new CommandLine("tesseract");
+			 * tessCommand.addArguments(tempImageFile.getAbsolutePath() + " " +
+			 * recognizedtext + " -l " + sourcelang);
+			 * 
+			 * System.out.println("Command is:" + tessCommand.toString());
+			 * 
+			 * ExecuteWatchdog watchDog = new ExecuteWatchdog(30000); // Not
+			 * more // than // 30 // seconds
+			 * 
+			 * DefaultExecutor executor = new DefaultExecutor();
+			 * executor.setWatchdog(watchDog);
+			 * 
+			 * TessHandler handler = new TessHandler(routingContext,
+			 * tempImageFile.getAbsolutePath(), recognizedtext, watchDog,
+			 * tessCommand, sourcelang, tolang);
+			 * 
+			 * executor.execute(tessCommand, handler);
+			 */
 
-			FastBitmap fbm = new FastBitmap(image);
-
-			Grayscale gray = new Grayscale();
-
-			gray.applyInPlace(fbm);
-
-			BradleyLocalThreshold bt = new BradleyLocalThreshold();
-			bt.applyInPlace(fbm);
-
-			File tempImageFile = File.createTempFile("indiafile", ".png");
-
-			ImageIO.write(fbm.toBufferedImage(), "png", tempImageFile);
-
-			String recognizedtext = "recoed" + System.currentTimeMillis();
-
-			CommandLine tessCommand = new CommandLine("tesseract");
-			tessCommand.addArguments(tempImageFile.getAbsolutePath() + " " + recognizedtext + " -l " + sourcelang);
-
-			System.out.println("Command is:" + tessCommand.toString());
-
-			ExecuteWatchdog watchDog = new ExecuteWatchdog(30000); // Not more
-																	// than
-																	// 30
-																	// seconds
-
-			DefaultExecutor executor = new DefaultExecutor();
-			executor.setWatchdog(watchDog);
-
-			TessHandler handler = new TessHandler(routingContext, tempImageFile.getAbsolutePath(), recognizedtext,
-					watchDog, tessCommand, sourcelang, tolang);
-
-			executor.execute(tessCommand, handler);
-
-		} catch (ExecuteException e) {
-			routingContext.response().end("Some problem in intermediate process.\n");
-			e.printStackTrace();
-			return;
-		} catch (IOException e) {
-			routingContext.response().end("IO Exception in intermediate process.\n");
-			e.printStackTrace();
-			return;
 		}
 
 		catch (Exception e) {

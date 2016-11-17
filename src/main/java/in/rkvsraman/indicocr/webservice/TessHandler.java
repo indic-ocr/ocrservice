@@ -87,7 +87,7 @@ public class TessHandler implements ExecuteResultHandler {
 				returnObject.put("englishTransliteration", toEnglish);
 				returnObject.put("tranliteratedTo", transliteratedString);
 				System.out.println(returnObject.toString());
-				context.response().write(returnObject.toString()).end();
+				context.response().end(returnObject.toString());
 
 			} else {
 				JsonObject returnObject = new JsonObject();
@@ -95,7 +95,9 @@ public class TessHandler implements ExecuteResultHandler {
 				returnObject.put("englishTransliteration", toEnglish);
 
 				System.out.println(returnObject.toString());
-				context.response().write(returnObject.toString()).end();
+				
+				context.response().end(returnObject.toString());
+				
 
 			}
 
