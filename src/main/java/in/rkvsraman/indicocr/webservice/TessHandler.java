@@ -77,9 +77,16 @@ public class TessHandler implements ExecuteResultHandler {
 					sb.append(s + " ");
 			}
 			br.close();
-			s = OCRPostProcessor.getProcessedString(sourcelang, sb.toString());
+			if (sourcelang.equals("eng"))
+				s = sb.toString();
+			else
+				s = OCRPostProcessor.getProcessedString(sourcelang, sb.toString());
 
-			String toEnglish = VarnamUtils.getEnglishString(s, sourcelang);
+			String toEnglish = "";
+			if (sourcelang.equals("eng"))
+				toEnglish = s;
+			else
+				toEnglish = VarnamUtils.getEnglishString(s, sourcelang);
 			if (toEnglish != null) {
 				String transliteratedString = VarnamUtils.transliterate(toEnglish, tolang);
 				JsonObject returnObject = new JsonObject();
@@ -95,9 +102,8 @@ public class TessHandler implements ExecuteResultHandler {
 				returnObject.put("englishTransliteration", toEnglish);
 
 				System.out.println(returnObject.toString());
-				
+
 				context.response().end(returnObject.toString());
-				
 
 			}
 

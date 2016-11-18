@@ -177,43 +177,7 @@ public class App extends AbstractVerticle {
 			AcrossIndiaTask ait = new AcrossIndiaTask(routingContext, filePath, sourcelang, tolang, bin);
 			service.execute(ait);
 			System.out.println("Transliterating..");
-			/*
-			 * BufferedImage image = ImageIO.read(new File(filePath));
-			 * 
-			 * FastBitmap fbm = new FastBitmap(image);
-			 * 
-			 * Grayscale gray = new Grayscale();
-			 * 
-			 * gray.applyInPlace(fbm);
-			 * 
-			 * BradleyLocalThreshold bt = new BradleyLocalThreshold();
-			 * bt.applyInPlace(fbm);
-			 * 
-			 * File tempImageFile = File.createTempFile("indiafile", ".png");
-			 * 
-			 * ImageIO.write(fbm.toBufferedImage(), "png", tempImageFile);
-			 * 
-			 * String recognizedtext = "recoed" + System.currentTimeMillis();
-			 * 
-			 * CommandLine tessCommand = new CommandLine("tesseract");
-			 * tessCommand.addArguments(tempImageFile.getAbsolutePath() + " " +
-			 * recognizedtext + " -l " + sourcelang);
-			 * 
-			 * System.out.println("Command is:" + tessCommand.toString());
-			 * 
-			 * ExecuteWatchdog watchDog = new ExecuteWatchdog(30000); // Not
-			 * more // than // 30 // seconds
-			 * 
-			 * DefaultExecutor executor = new DefaultExecutor();
-			 * executor.setWatchdog(watchDog);
-			 * 
-			 * TessHandler handler = new TessHandler(routingContext,
-			 * tempImageFile.getAbsolutePath(), recognizedtext, watchDog,
-			 * tessCommand, sourcelang, tolang);
-			 * 
-			 * executor.execute(tessCommand, handler);
-			 */
-
+			
 		}
 
 		catch (Exception e) {
