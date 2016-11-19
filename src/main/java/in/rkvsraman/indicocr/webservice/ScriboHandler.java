@@ -21,12 +21,15 @@ public class ScriboHandler implements ExecuteResultHandler {
 	private ExecuteWatchdog watchDog;
 	private CommandLine command;
 	private String language;
+	private int conversionType;
+	public static final int CONVERT_TO_ODT = 1;
+	public static final int CONVERT_TO_TEXT = 2;
 
 	public  ScriboHandler(RoutingContext context) {
 		this.context = context;
 	}
 	public ScriboHandler(RoutingContext routingContext, String filePath, File outputfile, ExecuteWatchdog watchDog,
-			CommandLine command, String language) {
+			CommandLine command, String language, int conversionType) {
 		
 		this.context = routingContext;
 		this.filePath = filePath;
@@ -34,15 +37,23 @@ public class ScriboHandler implements ExecuteResultHandler {
 		this.watchDog = watchDog;
 		this.command = command;
 		this.language = language;
+		this.conversionType = conversionType;
 		
 	}
 	@Override
 	public void onProcessComplete(int exitValue) {
 		
+		if(conversionType == CONVERT_TO_ODT)
 		convertToODT();
+		else
+			convertToText();
 
 	}
 
+	private void convertToText() {
+		
+		
+	}
 	private void convertToODT() {
 		ExecutorService service = Executors.newSingleThreadExecutor();
 		

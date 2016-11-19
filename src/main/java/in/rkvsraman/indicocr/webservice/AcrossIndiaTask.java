@@ -70,7 +70,7 @@ public class AcrossIndiaTask extends FutureTask<String> {
 			executor.setWatchdog(watchDog);
 
 			TessHandler handler = new TessHandler(routingContext,imagePath, recognizedtext,
-					watchDog, tessCommand, sourcelang, tolang);
+					watchDog, tessCommand, sourcelang, tolang, TessHandler.TESSERACT_COMMAND);
 
 			try {
 				executor.execute(tessCommand, handler);

@@ -3,6 +3,8 @@ package in.rkvsraman.indicocr.webservice;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -87,6 +89,7 @@ public class App extends AbstractVerticle {
 
 	private void getAll(RoutingContext routingContext) {
 
+		printRequestTime();
 		if (routingContext.fileUploads().size() < 1) {
 			routingContext.response().end("No file attached.\n");
 			return;
@@ -126,6 +129,7 @@ public class App extends AbstractVerticle {
 
 	private void getIndia(RoutingContext routingContext) {
 
+		printRequestTime();
 		if (routingContext.fileUploads().size() < 1) {
 			routingContext.response().end("No file attached.\n");
 			return;
@@ -172,11 +176,47 @@ public class App extends AbstractVerticle {
 			String tolang) {
 
 		try {
-			ExecutorService service = Executors.newSingleThreadExecutor();
-			BinaryImageConverter bin = new BinaryImageConverter(routingContext, filePath, sourcelang, tolang);
-			AcrossIndiaTask ait = new AcrossIndiaTask(routingContext, filePath, sourcelang, tolang, bin);
-			service.execute(ait);
-			System.out.println("Transliterating..");
+//			ExecutorService service = Executors.newSingleThreadExecutor();
+//			BinaryImageConverter bin = new BinaryImageConverter(routingContext, filePath, sourcelang, tolang);
+//			AcrossIndiaTask ait = new AcrossIndiaTask(routingContext, filePath, sourcelang, tolang, bin);
+//			service.execute(ait);
+//			System.out.println("Transliterating..");
+			
+			
+			CommandLine command = new CommandLine(config().getString("scribo_path"));
+
+			File outputfile;
+			try {
+				outputfile = File.createTempFile("fromweb", ".xml");
+			} catch (IOException e) {
+				routingContext.response().end("Could not create intermediate files.\n");
+				e.printStackTrace();
+				return;
+			}
+			command.addArguments(filePath + " " + outputfile.getAbsolutePath() + " --ocr-lang " + sourcelang);
+			System.out.println("Command is:" + command.toString());
+
+			ExecuteWatchdog watchDog = new ExecuteWatchdog(30000); // Not more than
+																	// 30 seconds
+
+			DefaultExecutor executor = new DefaultExecutor();
+			executor.setWatchdog(watchDog);
+
+			TessHandler handler = new TessHandler(routingContext,filePath, outputfile.getAbsolutePath(),
+					watchDog, command, sourcelang, tolang, TessHandler.SCRIBO_COMMAND);
+
+			try {
+				executor.execute(command, handler);
+			} catch (ExecuteException e) {
+				routingContext.response().end("Some problem in intermediate process.\n");
+				e.printStackTrace();
+				return;
+			} catch (IOException e) {
+				routingContext.response().end("IO Exception in intermediate process.\n");
+				e.printStackTrace();
+				return;
+			}
+			System.out.println("Conversion to xml started...");
 			
 		}
 
@@ -209,7 +249,7 @@ public class App extends AbstractVerticle {
 		DefaultExecutor executor = new DefaultExecutor();
 		executor.setWatchdog(watchDog);
 
-		ScriboHandler handler = new ScriboHandler(routingContext, filePath, outputfile, watchDog, command, lang);
+		ScriboHandler handler = new ScriboHandler(routingContext, filePath, outputfile, watchDog, command, lang,ScriboHandler.CONVERT_TO_ODT);
 
 		try {
 			executor.execute(command, handler);
@@ -224,6 +264,16 @@ public class App extends AbstractVerticle {
 		}
 		System.out.println("Conversion to xml started...");
 
+	}
+	
+	private void printRequestTime(){
+		
+		
+		
+		SimpleDateFormat sd = new SimpleDateFormat("HH:mm:::dd:MM:yyyy");
+		
+		System.out.println("\n\n\nnew request arrives at :"+ sd.format(new Date()));
+		
 	}
 
 }
