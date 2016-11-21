@@ -25,6 +25,14 @@ import org.odftoolkit.simple.style.StyleTypeDefinitions.HorizontalRelative;
 import org.odftoolkit.simple.style.StyleTypeDefinitions.VerticalRelative;
 import org.odftoolkit.simple.text.Paragraph;
 
+import Catalano.Imaging.FastBitmap;
+import Catalano.Imaging.Filters.BernsenThreshold;
+import Catalano.Imaging.Filters.BradleyLocalThreshold;
+import Catalano.Imaging.Filters.CannyEdgeDetector;
+import Catalano.Imaging.Filters.Grayscale;
+import Catalano.Imaging.Tools.Blob;
+import Catalano.Imaging.Tools.BlobDetection;
+import Catalano.Imaging.Tools.BlobExtractor;
 import in.rkvsraman.ocr.olena.scribocli.ObjectFactory;
 import in.rkvsraman.ocr.olena.scribocli.PcGts;
 import in.rkvsraman.ocr.olena.scribocli.PcGts.Page;
@@ -99,14 +107,12 @@ public class TessHandler implements ExecuteResultHandler {
 				List<Line> textLines = textRegion.getLines();
 				for (Line textLine : textLines) {
 
-					if( textLine.getText() != null && textLine.getText().trim().length() > 0)
+					if (textLine.getText() != null && textLine.getText().trim().length() > 0)
 						sb.append(textLine.getText().trim() + " ");
 				}
 
 			}
 			sendResponseText(sb.toString());
-			
-			
 
 		} catch (Exception e) {
 
@@ -119,7 +125,7 @@ public class TessHandler implements ExecuteResultHandler {
 	private void sendResponseText(String source) {
 		String sourceString = "";
 		if (sourcelang.equals("eng"))
-			sourceString =source;
+			sourceString = source;
 		else
 			sourceString = OCRPostProcessor.getProcessedString(sourcelang, source);
 
@@ -134,6 +140,7 @@ public class TessHandler implements ExecuteResultHandler {
 			returnObject.put("recognizedText", sourceString);
 			returnObject.put("englishTransliteration", toEnglish);
 			returnObject.put("tranliteratedTo", transliteratedString);
+			returnObject.put("filePath", this.filePath);
 			System.out.println(returnObject.toString());
 			context.response().end(returnObject.toString());
 
@@ -141,13 +148,64 @@ public class TessHandler implements ExecuteResultHandler {
 			JsonObject returnObject = new JsonObject();
 			returnObject.put("recognizedText", sourceString);
 			returnObject.put("englishTransliteration", toEnglish);
+			returnObject.put("filePath", this.filePath);
 
 			System.out.println(returnObject.toString());
 
 			context.response().end(returnObject.toString());
 
 		}
-		
+//		checkForegroundAndBackground();
+
+	}
+
+	private void checkForegroundAndBackground() {
+		// TODO Auto-generated method stub
+		try {
+
+			FastBitmap fbm = new FastBitmap(ImageIO.read(new File(filePath)));
+
+			Grayscale gray = new Grayscale();
+			gray.applyInPlace(fbm);
+
+			ImageIO.write(fbm.toBufferedImage(), "png", File.createTempFile("gray", ".png"));
+
+			FastBitmap newFbm = new FastBitmap(fbm);
+
+			BradleyLocalThreshold blt = new BradleyLocalThreshold();
+			blt.applyInPlace(newFbm);
+
+			ImageIO.write(newFbm.toBufferedImage(), "png", File.createTempFile("brad", ".png"));
+
+			newFbm = new FastBitmap(fbm);
+
+			BernsenThreshold bt = new BernsenThreshold();
+
+			bt.applyInPlace(newFbm);
+
+			ImageIO.write(newFbm.toBufferedImage(), "png", File.createTempFile("bern", ".png"));
+
+			CannyEdgeDetector cn = new CannyEdgeDetector();
+
+			cn.applyInPlace(fbm);
+
+			ImageIO.write(fbm.toBufferedImage(), "png", File.createTempFile("canny", ".png"));
+			BlobDetection bd = new BlobDetection();
+
+			List<Blob> blobs = bd.ProcessImage(fbm);
+			System.out.println("Blobs size:" + blobs.size());
+
+			BlobExtractor be = new BlobExtractor();
+
+			for (Blob b : blobs) {
+				FastBitmap temp = be.ExtractBox(fbm, b);
+				ImageIO.write(temp.toBufferedImage(), "png", File.createTempFile("blob", ".png"));
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	private void doTesseract() {
@@ -169,7 +227,6 @@ public class TessHandler implements ExecuteResultHandler {
 			}
 			br.close();
 			sendResponseText(sb.toString());
-			
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

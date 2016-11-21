@@ -1,6 +1,7 @@
 package in.rkvsraman.indicocr.webservice;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -10,6 +11,7 @@ import java.util.concurrent.Executors;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.imageio.ImageIO;
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -27,6 +29,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
@@ -73,10 +76,13 @@ public class App extends AbstractVerticle {
 		router.post("/ocr").handler(this::getAll);
 
 		router.post("/india").handler(this::getIndia);
+		router.post("/indiastring").handler(this::getIndiaString);
 
 		// Create the HTTP server and pass the "accept" method to the request
 		// handler.
-		vertx.createHttpServer().requestHandler(router::accept).listen(
+		HttpServerOptions serverOptions = new HttpServerOptions();
+		serverOptions.setCompressionSupported(true);
+		vertx.createHttpServer(serverOptions).requestHandler(router::accept).listen(
 
 				config().getInteger("http.port", 8080), result -> {
 					if (result.succeeded()) {
@@ -172,17 +178,39 @@ public class App extends AbstractVerticle {
 
 	}
 
+	private void getIndiaString(RoutingContext routingContext) {
+
+		printRequestTime();
+
+		try {
+			ExecutorService service = Executors.newSingleThreadExecutor();
+			RequestSerializer serializer = new RequestSerializer(routingContext);
+			AcrossIndiaStringTask ast = new AcrossIndiaStringTask(routingContext, serializer);
+
+			service.execute(ast);
+			System.out.println("Transliterating..");
+
+		} catch (Exception e) {
+
+			routingContext.response().end("Something broke!!");
+			e.printStackTrace();
+		}
+
+	}
+
 	private void binarizeAndRecognize(RoutingContext routingContext, String filePath, String sourcelang,
 			String tolang) {
 
 		try {
-//			ExecutorService service = Executors.newSingleThreadExecutor();
-//			BinaryImageConverter bin = new BinaryImageConverter(routingContext, filePath, sourcelang, tolang);
-//			AcrossIndiaTask ait = new AcrossIndiaTask(routingContext, filePath, sourcelang, tolang, bin);
-//			service.execute(ait);
-//			System.out.println("Transliterating..");
-			
-			
+			// ExecutorService service = Executors.newSingleThreadExecutor();
+			// BinaryImageConverter bin = new
+			// BinaryImageConverter(routingContext, filePath, sourcelang,
+			// tolang);
+			// AcrossIndiaTask ait = new AcrossIndiaTask(routingContext,
+			// filePath, sourcelang, tolang, bin);
+			// service.execute(ait);
+			// System.out.println("Transliterating..");
+
 			CommandLine command = new CommandLine(config().getString("scribo_path"));
 
 			File outputfile;
@@ -196,14 +224,16 @@ public class App extends AbstractVerticle {
 			command.addArguments(filePath + " " + outputfile.getAbsolutePath() + " --ocr-lang " + sourcelang);
 			System.out.println("Command is:" + command.toString());
 
-			ExecuteWatchdog watchDog = new ExecuteWatchdog(30000); // Not more than
-																	// 30 seconds
+			ExecuteWatchdog watchDog = new ExecuteWatchdog(60000); // Not more
+																	// than
+																	// 30
+																	// seconds
 
 			DefaultExecutor executor = new DefaultExecutor();
 			executor.setWatchdog(watchDog);
 
-			TessHandler handler = new TessHandler(routingContext,filePath, outputfile.getAbsolutePath(),
-					watchDog, command, sourcelang, tolang, TessHandler.SCRIBO_COMMAND);
+			TessHandler handler = new TessHandler(routingContext, filePath, outputfile.getAbsolutePath(), watchDog,
+					command, sourcelang, tolang, TessHandler.SCRIBO_COMMAND);
 
 			try {
 				executor.execute(command, handler);
@@ -217,7 +247,7 @@ public class App extends AbstractVerticle {
 				return;
 			}
 			System.out.println("Conversion to xml started...");
-			
+
 		}
 
 		catch (Exception e) {
@@ -249,7 +279,8 @@ public class App extends AbstractVerticle {
 		DefaultExecutor executor = new DefaultExecutor();
 		executor.setWatchdog(watchDog);
 
-		ScriboHandler handler = new ScriboHandler(routingContext, filePath, outputfile, watchDog, command, lang,ScriboHandler.CONVERT_TO_ODT);
+		ScriboHandler handler = new ScriboHandler(routingContext, filePath, outputfile, watchDog, command, lang,
+				ScriboHandler.CONVERT_TO_ODT);
 
 		try {
 			executor.execute(command, handler);
@@ -265,15 +296,13 @@ public class App extends AbstractVerticle {
 		System.out.println("Conversion to xml started...");
 
 	}
-	
-	private void printRequestTime(){
-		
-		
-		
+
+	private void printRequestTime() {
+
 		SimpleDateFormat sd = new SimpleDateFormat("HH:mm:::dd:MM:yyyy");
-		
-		System.out.println("\n\n\nnew request arrives at :"+ sd.format(new Date()));
-		
+
+		System.out.println("\n\n\nnew request arrives at :" + sd.format(new Date()));
+
 	}
 
 }
