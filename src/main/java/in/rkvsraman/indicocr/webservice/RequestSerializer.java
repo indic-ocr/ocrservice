@@ -1,5 +1,6 @@
 package in.rkvsraman.indicocr.webservice;
 
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -11,10 +12,12 @@ import javax.xml.bind.DatatypeConverter;
 
 import Catalano.Imaging.FastBitmap;
 import Catalano.Imaging.Filters.BradleyLocalThreshold;
+import Catalano.Imaging.Filters.Crop;
 import Catalano.Imaging.Filters.Grayscale;
 import Catalano.Imaging.Filters.Invert;
 import Catalano.Imaging.Filters.Rotate;
 import Catalano.Imaging.Tools.DocumentSkewChecker;
+import in.rkvsraman.indicocr.utils.RectangleUtils;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
@@ -58,8 +61,20 @@ public class RequestSerializer implements Callable<JsonObject> {
 
 				double angle = skewChecker.getSkewAngle(fbm);
 
-				Rotate rotate = new Rotate(-angle);
+				Rotate rotate = new Rotate(-angle,true);
 				rotate.applyInPlace(fbm);
+				
+//				filePath = File.createTempFile("beforerotate", ".png");
+//				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
+//				
+//				Rectangle rect = RectangleUtils.getLargestRectangle(fbm.getWidth(), fbm.getHeight(), angle, 0);
+//				
+//				System.out.println(fbm.getWidth() + " " + fbm.getHeight() + " " + rect.width + " " + rect.height + " " + angle + " " + rect.x + " " + rect.y);
+//				Crop crop = new Crop(rect.x, rect.y, rect.width, rect.height);
+//				
+//				crop.ApplyInPlace(fbm);
+				
+				
 				filePath = File.createTempFile("inverted", ".png");
 
 				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
@@ -78,8 +93,22 @@ public class RequestSerializer implements Callable<JsonObject> {
 
 				double angle = skewChecker.getSkewAngle(fbm);
 
-				Rotate rotate = new Rotate(-angle);
+				Rotate rotate = new Rotate(-angle,true);
 				rotate.applyInPlace(fbm);
+				
+				
+//				filePath = File.createTempFile("beforerotate", ".png");
+//				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
+//				
+//				Rectangle rect = RectangleUtils.getLargestRectangle(fbm.getWidth(), fbm.getHeight(), angle, 0);
+//				
+//				System.out.println(fbm.getWidth() + " " + fbm.getHeight() + " " + rect.width + " " + rect.height+ " " + angle+ " " + rect.x + " " + rect.y);
+//				
+//				Crop crop = new Crop(rect.x, rect.y, rect.width, rect.height);
+//				
+//				crop.ApplyInPlace(fbm);
+				
+				
 				filePath = File.createTempFile("binary", ".png");
 
 				ImageIO.write(fbm.toBufferedImage(), "png", filePath);

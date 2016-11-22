@@ -184,8 +184,8 @@ public class App extends AbstractVerticle {
 
 		try {
 			ExecutorService service = Executors.newSingleThreadExecutor();
-			RequestSerializer serializer = new RequestSerializer(routingContext);
-			AcrossIndiaStringTask ast = new AcrossIndiaStringTask(routingContext, serializer);
+			RequestSerializer serializer = new RequestSerializer(routingContext );
+			AcrossIndiaStringTask ast = new AcrossIndiaStringTask(routingContext, serializer, config());
 
 			service.execute(ast);
 			System.out.println("Transliterating..");

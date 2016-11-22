@@ -267,8 +267,11 @@ public class RotateNearestNeighbor implements IApplyInPlace {
         // recalculate image size
         halfWidth  = Math.max( Math.max( cx1, cx2 ), Math.max( cx3, cx4 ) ) - Math.min( Math.min( cx1, cx2 ), Math.min( cx3, cx4 ) );
         halfHeight = Math.max( Math.max( cy1, cy2 ), Math.max( cy3, cy4 ) ) - Math.min( Math.min( cy1, cy2 ), Math.min( cy3, cy4 ) );
+        
+      
 
         this.newWidth = (int)(halfWidth * 2 + 0.5);
         this.newHeight = (int)(halfHeight * 2 + 0.5);
+        System.out.println(fastBitmap.getWidth() + " "+ this.newWidth + " " + fastBitmap.getHeight() + " " + this.newHeight);
     }
 }

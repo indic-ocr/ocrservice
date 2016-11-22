@@ -17,16 +17,19 @@ import io.vertx.ext.web.RoutingContext;
 public class AcrossIndiaStringTask extends FutureTask<JsonObject> {
 
 	private RoutingContext routingContext;
+	private JsonObject config;
 
 	public AcrossIndiaStringTask(Callable<JsonObject> callable) {
 		super(callable);
 		// TODO Auto-generated constructor stub
 	}
 
-	public AcrossIndiaStringTask(RoutingContext routingContext, RequestSerializer converter) {
+	public AcrossIndiaStringTask(RoutingContext routingContext, RequestSerializer converter, JsonObject config) {
 		super(converter);
 		this.routingContext = routingContext;
+		this.config = config;
 
+		
 	}
 
 	@Override
@@ -48,7 +51,7 @@ public class AcrossIndiaStringTask extends FutureTask<JsonObject> {
 			executor.setWatchdog(watchDog);
 
 			if (parsedObject.getString("engine").equals("scribo")) {
-				CommandLine command = new CommandLine("/home/raman/ocr/olena/olena/scribo/src/content_in_doc");
+				CommandLine command = new CommandLine(config.getString("scribo_path"));
 
 				File outputfile;
 				try {
