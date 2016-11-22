@@ -13,6 +13,8 @@ import Catalano.Imaging.FastBitmap;
 import Catalano.Imaging.Filters.BradleyLocalThreshold;
 import Catalano.Imaging.Filters.Grayscale;
 import Catalano.Imaging.Filters.Invert;
+import Catalano.Imaging.Filters.Rotate;
+import Catalano.Imaging.Tools.DocumentSkewChecker;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
@@ -32,6 +34,7 @@ public class RequestSerializer implements Callable<JsonObject> {
 		String tolang = obj.getString("tolang");
 		String sourcelang = obj.getString("sourcelang");
 		String operation = obj.getString("operation");
+		String useEngine = obj.getString("engine");
 		// System.out.println("Lang:" + img + " " + tolang);
 
 		try {
@@ -42,14 +45,41 @@ public class RequestSerializer implements Callable<JsonObject> {
 				FastBitmap fbm = new FastBitmap(bufferedImage);
 
 				Invert inv = new Invert();
-				
+
 				inv.applyInPlace(fbm);
-				
+
 				Grayscale grayscale = new Grayscale();
 				grayscale.applyInPlace(fbm);
 
 				BradleyLocalThreshold bld = new BradleyLocalThreshold();
 				bld.applyInPlace(fbm);
+
+				DocumentSkewChecker skewChecker = new DocumentSkewChecker();
+
+				double angle = skewChecker.getSkewAngle(fbm);
+
+				Rotate rotate = new Rotate(-angle);
+				rotate.applyInPlace(fbm);
+				filePath = File.createTempFile("inverted", ".png");
+
+				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
+			}
+			if (operation.equals("binarize")) {
+				BufferedImage bufferedImage = ImageIO.read(filePath);
+
+				FastBitmap fbm = new FastBitmap(bufferedImage);
+
+				Grayscale grayscale = new Grayscale();
+				grayscale.applyInPlace(fbm);
+
+				BradleyLocalThreshold bld = new BradleyLocalThreshold();
+				bld.applyInPlace(fbm);
+				DocumentSkewChecker skewChecker = new DocumentSkewChecker();
+
+				double angle = skewChecker.getSkewAngle(fbm);
+
+				Rotate rotate = new Rotate(-angle);
+				rotate.applyInPlace(fbm);
 				filePath = File.createTempFile("binary", ".png");
 
 				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
@@ -72,6 +102,7 @@ public class RequestSerializer implements Callable<JsonObject> {
 			returnObject.put("filePath", filePath.getAbsolutePath());
 			returnObject.put("sourcelang", sourcelang);
 			returnObject.put("tolang", tolang);
+			returnObject.put("engine", useEngine);
 
 			return returnObject;
 
