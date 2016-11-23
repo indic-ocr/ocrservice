@@ -150,10 +150,14 @@ public class Crop {
      */
     public void ApplyInPlace(FastBitmap fastBitmap){
         
-        if((this.x + height > fastBitmap.getHeight()) ||
-                this.y + width > fastBitmap.getWidth()){
-            throw new IllegalArgumentException("The size is higher than original image.");
+        if(this.x + height > fastBitmap.getHeight()){
+        
+        	height = fastBitmap.getHeight() - this.x;
         }
+        if(this.y + width > fastBitmap.getWidth()){
+        	width = fastBitmap.getWidth() - this.y;
+        }
+               
         
         FastBitmap l = new FastBitmap(width, height, fastBitmap.getColorSpace());
         
