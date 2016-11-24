@@ -5,18 +5,22 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.JAXBContext;
 
-
 import org.apache.commons.exec.CommandLine;
+
 import org.odftoolkit.odfdom.dom.element.draw.DrawTextBoxElement;
 import org.odftoolkit.odfdom.dom.element.style.StyleMasterPageElement;
+import org.odftoolkit.odfdom.dom.style.props.OdfHeaderFooterProperties;
 import org.odftoolkit.odfdom.incubator.doc.style.OdfStylePageLayout;
 import org.odftoolkit.odfdom.type.Color;
 import org.odftoolkit.simple.TextDocument;
+import org.odftoolkit.simple.Document.ScriptType;
 import org.odftoolkit.simple.draw.FrameRectangle;
 import org.odftoolkit.simple.draw.FrameStyleHandler;
 import org.odftoolkit.simple.draw.Image;
@@ -49,7 +53,7 @@ import io.vertx.ext.web.RoutingContext;
 
 public class ODTConverter implements Callable<String> {
 
-	static double point_to_centimeter = 0.035277778;
+	static final double point_to_centimeter = 0.035277778;
 	int reduce_y = 0;
 	double x_factor, y_factor;
 	double a4_width_in_cm = 21, a4_height_in_cm = 29.7;
@@ -59,12 +63,14 @@ public class ODTConverter implements Callable<String> {
 	private CommandLine command;
 	private String language;
 
+	static final double DPI = 300.0;
+
 	public ODTConverter(RoutingContext context, String filePath, File outputFile, CommandLine command,
 			String language) {
 		this.context = context;
 		this.filePath = filePath;
 		this.outputFile = outputFile;
-		
+
 		this.command = command;
 		this.language = language;
 	}
@@ -77,6 +83,20 @@ public class ODTConverter implements Callable<String> {
 
 		BufferedImage bi = ImageIO.read(new File(filePath));
 
+		double currentDocDPI = DPI;
+
+		System.out.println("Filename:" + filePath);
+		System.out.println("Image Dims:" + bi.getWidth() + " " + bi.getHeight());
+		double pageWidthInMM = (bi.getWidth() / currentDocDPI) * 25.4;
+
+		double pageHeightInMM = (bi.getHeight() / currentDocDPI) * 25.4;
+		
+		System.out.println( "Page Dims:" + pageWidthInMM + " "+ pageHeightInMM);
+
+		Properties locales = new Properties();
+
+		locales.load(ODTConverter.class.getResourceAsStream("/tesseractpostprocessor/langcode.properties"));
+
 		PcGts pcgts = (PcGts) jc.createUnmarshaller().unmarshal(xml);
 		Page page = pcgts.getPage();
 
@@ -84,15 +104,20 @@ public class ODTConverter implements Callable<String> {
 		TextDocument outputOdt = TextDocument.newTextDocument();
 
 		StyleMasterPageElement defaultPage = outputOdt.getOfficeMasterStyles().getMasterPage("Standard");
+
 		String pageLayoutName = defaultPage.getStylePageLayoutNameAttribute();
 		System.out.println("Page layout name:" + pageLayoutName);
 		OdfStylePageLayout pageLayoutStyle = defaultPage.getAutomaticStyles().getPageLayout(pageLayoutName);
 		PageLayoutProperties pageLayoutProperties = PageLayoutProperties
 				.getOrCreatePageLayoutProperties(pageLayoutStyle);
-		//a4_height_in_cm = a4_width_in_cm * (bi.getHeight()/bi.getWidth()) *10;
-				
-		pageLayoutProperties.setPageHeight(a4_height_in_cm * 10);
-		pageLayoutProperties.setPageWidth(a4_width_in_cm * 10);
+
+		// a4_height_in_cm = a4_width_in_cm * (bi.getHeight()/bi.getWidth())
+		// *10;
+
+		outputOdt.removeElementLinkedResource(outputOdt.getHeader().getOdfElement());
+		outputOdt.removeElementLinkedResource(outputOdt.getFooter().getOdfElement());
+		pageLayoutProperties.setPageHeight(pageHeightInMM + 40.0);
+		pageLayoutProperties.setPageWidth(pageWidthInMM);
 		pageLayoutProperties.setPrintOrientation(PrintOrientation.PORTRAIT);
 		pageLayoutProperties.setBorders(CellBordersType.ALL_FOUR, Border.NONE);
 		pageLayoutProperties.setMarginLeft(0);
@@ -100,10 +125,10 @@ public class ODTConverter implements Callable<String> {
 		pageLayoutProperties.setMarginTop(0);
 		pageLayoutProperties.setMarginBottom(0);
 
-		x_factor = page.getImageWidth() / a4_width_in_cm;
-		y_factor = page.getImageHeight() / a4_height_in_cm;
+		x_factor = page.getImageWidth() / (pageWidthInMM / 10);
+		y_factor = page.getImageHeight() / (pageHeightInMM / 10);
 
-//		System.out.println("Factors:" + x_factor + " " + y_factor);
+		// System.out.println("Factors:" + x_factor + " " + y_factor);
 
 		Paragraph para1 = outputOdt.addParagraph("");
 
@@ -119,7 +144,7 @@ public class ODTConverter implements Callable<String> {
 
 			File f = File.createTempFile("temp", ".png");
 
-//			System.out.println(f.getAbsolutePath());
+			// System.out.println(f.getAbsolutePath());
 
 			ImageIO.write(tempImage, "png", f);
 
@@ -147,15 +172,22 @@ public class ODTConverter implements Callable<String> {
 				tBox.getStyleHandler().setHorizontalRelative(HorizontalRelative.PAGE);
 				tBox.getStyleHandler().setVerticalRelative(VerticalRelative.PAGE);
 
-				Paragraph tempPara = tBox.addParagraph(OCRPostProcessor.getProcessedString(language, textLine.getText()));
-				
-				Font f = tempPara.getFont();
-				f.setFamilyName("Noto Sans Malayalam");
-			//	f.setSize((textLine.getAHeight() / y_factor) / point_to_centimeter);
-				System.out.println("Font size:" + (textLine.getAHeight() / y_factor) / point_to_centimeter);
-				tempPara.setFont(f);
+				Paragraph tempPara = tBox
+						.addParagraph(OCRPostProcessor.getProcessedString(language, textLine.getText()));
+				if (language.equals("eng")) {
+					Font englishFont = tempPara.getStyleHandler().getFont(ScriptType.WESTERN);
+					englishFont.setSize((textLine.getAHeight() / y_factor) / point_to_centimeter);
 
-//				System.out.println(textLine.getText() + " " + rectangle.getXDesc() + " " + rectangle.getYDesc());
+					tempPara.getStyleHandler().setFont(englishFont, Locale.ENGLISH);
+				} else {
+					Font complexFont = tempPara.getStyleHandler().getFont(ScriptType.CTL);
+					complexFont.setSize((textLine.getAHeight() / y_factor) / point_to_centimeter);
+
+					tempPara.getStyleHandler().setFont(complexFont, new Locale(locales.getProperty(language) + "-IN"));
+				}
+
+				// System.out.println(textLine.getText() + " " +
+				// rectangle.getXDesc() + " " + rectangle.getYDesc());
 			}
 
 		}
@@ -180,7 +212,7 @@ public class ODTConverter implements Callable<String> {
 				y_Min = image.getYMin();
 		}
 
-//		System.out.println("Reduce Y = " + y_Min);
+		// System.out.println("Reduce Y = " + y_Min);
 		reduce_y = y_Min;
 
 	}
@@ -207,9 +239,10 @@ public class ODTConverter implements Callable<String> {
 
 		yMin -= reduce_y;
 		yMax -= reduce_y;
-//		System.out.println(xMin + " " + yMin + " " + (xMax - xMin) + " " + (yMax - yMin));
-//		System.out.println(xMin / x_factor + " " + yMin / y_factor + " " + (xMax - xMin) / x_factor + " "
-//				+ (yMax - yMin) / y_factor);
+	//	System.out.println("Factors:" + x_factor + " " + y_factor);
+	//	System.out.println(xMin + " " + xMax + " " + yMin + " " + yMax + " " + (xMax - xMin) + " " + (yMax - yMin));
+		//System.out.println(xMin / x_factor + " " + yMin / y_factor + " " + (xMax - xMin) / x_factor + " "
+			//	+ (yMax - yMin) / y_factor);
 		return new FrameRectangle(xMin / x_factor, yMin / y_factor, (xMax - xMin) / x_factor, (yMax - yMin) / y_factor,
 				SupportedLinearMeasure.CM);
 

@@ -6,10 +6,10 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>IndicOCR</name>
 	<description>Web OCR Service for Indian languages</description>
-	
+
 	<dependencies>
 
-		
+
 
 
 
@@ -49,6 +49,7 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.4</version>
 		</dependency>
+		
 	</dependencies>
 	<build>
 		<finalName>IndicOCR</finalName>
@@ -82,7 +83,7 @@
 				<configuration>
 					<mainClass>in.rkvsraman.indicocr.webservice.App</mainClass>
 					<arguments>
-					<argument>/home/raman/ocr/olena/olena/scribo/src/content_in_doc</argument>
+						<argument>/home/raman/ocr/olena/olena/scribo/src/content_in_doc</argument>
 					</arguments>
 				</configuration>
 			</plugin>
