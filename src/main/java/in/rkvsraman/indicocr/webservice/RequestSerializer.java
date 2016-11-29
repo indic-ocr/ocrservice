@@ -64,17 +64,19 @@ public class RequestSerializer implements Callable<JsonObject> {
 				Rotate rotate = new Rotate(-angle, true);
 				rotate.applyInPlace(fbm);
 
-				filePath = File.createTempFile("beforerotate", ".png");
+			/*	filePath = File.createTempFile("beforerotate", ".png");
 				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
 
 				Rectangle rect = RectangleUtils.getLargestRectangle(fbm.getWidth(), fbm.getHeight(), angle, 0);
 
 				System.out.println(fbm.getWidth() + " " + fbm.getHeight() + " " + rect.getWidth() + " "
 						+ rect.getHeight() + " " + angle + " " + rect.getX() + " " + rect.getY());
-				Crop crop = new Crop((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
-						(int) rect.getHeight());
+				if (rect.getWidth() > 0.0 && rect.getHeight() > 0.0 && rect.getX() > 0.0 && rect.getY() > 0.0) {
+					Crop crop = new Crop((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
+							(int) rect.getHeight());
 
-				crop.ApplyInPlace(fbm);
+					crop.ApplyInPlace(fbm);
+				}*/
 
 				filePath = File.createTempFile("inverted", ".png");
 
@@ -97,18 +99,19 @@ public class RequestSerializer implements Callable<JsonObject> {
 				Rotate rotate = new Rotate(-angle, true);
 				rotate.applyInPlace(fbm);
 
-				filePath = File.createTempFile("beforerotate", ".png");
+			/*	filePath = File.createTempFile("beforerotate", ".png");
 				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
 
 				Rectangle rect = RectangleUtils.getLargestRectangle(fbm.getWidth(), fbm.getHeight(), angle, 0);
 
 				System.out.println(fbm.getWidth() + " " + fbm.getHeight() + " " + rect.getWidth() + " "
 						+ rect.getHeight() + " " + angle + " " + rect.getX() + " " + rect.getY());
-				Crop crop = new Crop((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
-						(int) rect.getHeight());
+				if (rect.getWidth() > 0.0 && rect.getHeight() > 0.0 && rect.getX() > 0.0 && rect.getY() > 0.0) {
+					Crop crop = new Crop((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
+							(int) rect.getHeight());
 
-				crop.ApplyInPlace(fbm);
-
+					crop.ApplyInPlace(fbm);
+				}*/
 				filePath = File.createTempFile("binary", ".png");
 
 				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
