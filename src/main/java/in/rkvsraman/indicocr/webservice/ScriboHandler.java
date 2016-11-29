@@ -24,12 +24,13 @@ public class ScriboHandler implements ExecuteResultHandler {
 	private int conversionType;
 	public static final int CONVERT_TO_ODT = 1;
 	public static final int CONVERT_TO_TEXT = 2;
+	int dpi;
 
 	public  ScriboHandler(RoutingContext context) {
 		this.context = context;
 	}
 	public ScriboHandler(RoutingContext routingContext, String filePath, File outputfile, ExecuteWatchdog watchDog,
-			CommandLine command, String language, int conversionType) {
+			CommandLine command, String language, int conversionType , String dpi) {
 		
 		this.context = routingContext;
 		this.filePath = filePath;
@@ -38,6 +39,7 @@ public class ScriboHandler implements ExecuteResultHandler {
 		this.command = command;
 		this.language = language;
 		this.conversionType = conversionType;
+		this.dpi = Integer.parseInt(dpi);
 		
 	}
 	@Override
@@ -57,7 +59,7 @@ public class ScriboHandler implements ExecuteResultHandler {
 	private void convertToODT() {
 		ExecutorService service = Executors.newSingleThreadExecutor();
 		
-		ODTConverter converter = new ODTConverter(context,filePath,outputFile,command , language);
+		ODTConverter converter = new ODTConverter(context,filePath,outputFile,command , language, dpi);
 		ODTTask task = new ODTTask(context,filePath,outputFile,command , language,converter);
 		
 		service.execute(task);

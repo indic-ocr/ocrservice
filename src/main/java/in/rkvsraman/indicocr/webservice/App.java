@@ -56,6 +56,7 @@ public class App extends AbstractVerticle {
 
 		System.out.println("ScriboPath:" + config().getString("scribo_path"));
 		startWebApp(startFuture);
+		System.out.println("Server started on :"+ config().getInteger("http.port"));
 	}
 
 	private void startWebApp(Future<Void> startFuture) {
@@ -69,11 +70,13 @@ public class App extends AbstractVerticle {
 			response.putHeader("content-type", "text/html")
 					.end("<html><body><h1>Indic OCR Service</h1><form action=\"/ocr\" ENCTYPE=\"multipart/form-data\" method=\"POST\" >"
 							+ "choose a file to upload:<input type=\"file\" name=\"myfile\"/><br>"
-							+ "<input type=\"text\" name=\"lang\" placeholder=\"eng\">" + " <input type=\"submit\"/>"
+							+ "<input type=\"text\" name=\"lang\" placeholder=\"eng\">"
+							+ "<input type=\"text\" name=\"dpi\" placeholder=\"300\" >" 
+							+ " <input type=\"submit\"/>"
 							+ "</form> </body></html>");
 		});
 
-		router.post("/ocr").handler(this::getAll);
+		router.post("/ocr").handler(this::getODT);
 
 		router.post("/india").handler(this::getIndia);
 		router.post("/indiastring").handler(this::getIndiaString);
@@ -93,7 +96,7 @@ public class App extends AbstractVerticle {
 				});
 	}
 
-	private void getAll(RoutingContext routingContext) {
+	private void getODT(RoutingContext routingContext) {
 
 		printRequestTime();
 		if (routingContext.fileUploads().size() < 1) {
@@ -118,6 +121,10 @@ public class App extends AbstractVerticle {
 		// }
 
 		String lang = routingContext.request().getFormAttribute("lang");
+		String dpi = routingContext.request().getFormAttribute("dpi");
+		System.out.println("DPI is:"+ dpi);
+		if(dpi == null)
+			dpi = "300";
 		System.out.println("Lang:" + lang);
 		if (lang == null || lang.length() == 0) {
 			routingContext.response().end("No language specified.\n");
@@ -129,7 +136,7 @@ public class App extends AbstractVerticle {
 			return;
 		}
 
-		convertToODTAndSend(routingContext, filePath, lang);
+		convertToODTAndSend(routingContext, filePath, lang,dpi);
 
 	}
 
@@ -202,14 +209,7 @@ public class App extends AbstractVerticle {
 			String tolang) {
 
 		try {
-			// ExecutorService service = Executors.newSingleThreadExecutor();
-			// BinaryImageConverter bin = new
-			// BinaryImageConverter(routingContext, filePath, sourcelang,
-			// tolang);
-			// AcrossIndiaTask ait = new AcrossIndiaTask(routingContext,
-			// filePath, sourcelang, tolang, bin);
-			// service.execute(ait);
-			// System.out.println("Transliterating..");
+			
 
 			CommandLine command = new CommandLine(config().getString("scribo_path"));
 
@@ -226,7 +226,7 @@ public class App extends AbstractVerticle {
 
 			ExecuteWatchdog watchDog = new ExecuteWatchdog(60000); // Not more
 																	// than
-																	// 30
+																	// 60
 																	// seconds
 
 			DefaultExecutor executor = new DefaultExecutor();
@@ -258,7 +258,7 @@ public class App extends AbstractVerticle {
 
 	}
 
-	private void convertToODTAndSend(RoutingContext routingContext, String filePath, String lang) {
+	private void convertToODTAndSend(RoutingContext routingContext, String filePath, String lang, String dpi) {
 
 		CommandLine command = new CommandLine(config().getString("scribo_path"));
 
@@ -280,7 +280,7 @@ public class App extends AbstractVerticle {
 		executor.setWatchdog(watchDog);
 
 		ScriboHandler handler = new ScriboHandler(routingContext, filePath, outputfile, watchDog, command, lang,
-				ScriboHandler.CONVERT_TO_ODT);
+				ScriboHandler.CONVERT_TO_ODT, dpi);
 
 		try {
 			executor.execute(command, handler);

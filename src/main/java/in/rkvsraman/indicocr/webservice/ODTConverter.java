@@ -62,17 +62,20 @@ public class ODTConverter implements Callable<String> {
 	private File outputFile;
 	private CommandLine command;
 	private String language;
+	
+	private int dpi;
 
 	static final double DPI = 300.0;
 
 	public ODTConverter(RoutingContext context, String filePath, File outputFile, CommandLine command,
-			String language) {
+			String language, int dpi) {
 		this.context = context;
 		this.filePath = filePath;
 		this.outputFile = outputFile;
 
 		this.command = command;
 		this.language = language;
+		this.dpi = dpi;
 	}
 
 	@Override
@@ -84,6 +87,10 @@ public class ODTConverter implements Callable<String> {
 		BufferedImage bi = ImageIO.read(new File(filePath));
 
 		double currentDocDPI = DPI;
+		if(dpi != 0)
+		 currentDocDPI = new Integer(dpi).doubleValue();
+		
+			
 
 		System.out.println("Filename:" + filePath);
 		System.out.println("Image Dims:" + bi.getWidth() + " " + bi.getHeight());
