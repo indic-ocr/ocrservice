@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.Callable;
 
 import javax.imageio.ImageIO;
@@ -34,6 +36,9 @@ public class RequestSerializer implements Callable<JsonObject> {
 		JsonObject obj = context.getBodyAsJson();
 
 		String img = obj.getString("filePath");
+		if (img.startsWith("https://")) { // Hack for fb messenger
+			img = getFilePathFromURL(img);
+		}
 		String tolang = obj.getString("tolang");
 		String sourcelang = obj.getString("sourcelang");
 		String operation = obj.getString("operation");
@@ -64,19 +69,24 @@ public class RequestSerializer implements Callable<JsonObject> {
 				Rotate rotate = new Rotate(-angle, true);
 				rotate.applyInPlace(fbm);
 
-			/*	filePath = File.createTempFile("beforerotate", ".png");
-				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
-
-				Rectangle rect = RectangleUtils.getLargestRectangle(fbm.getWidth(), fbm.getHeight(), angle, 0);
-
-				System.out.println(fbm.getWidth() + " " + fbm.getHeight() + " " + rect.getWidth() + " "
-						+ rect.getHeight() + " " + angle + " " + rect.getX() + " " + rect.getY());
-				if (rect.getWidth() > 0.0 && rect.getHeight() > 0.0 && rect.getX() > 0.0 && rect.getY() > 0.0) {
-					Crop crop = new Crop((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
-							(int) rect.getHeight());
-
-					crop.ApplyInPlace(fbm);
-				}*/
+				/*
+				 * filePath = File.createTempFile("beforerotate", ".png");
+				 * ImageIO.write(fbm.toBufferedImage(), "png", filePath);
+				 * 
+				 * Rectangle rect =
+				 * RectangleUtils.getLargestRectangle(fbm.getWidth(),
+				 * fbm.getHeight(), angle, 0);
+				 * 
+				 * System.out.println(fbm.getWidth() + " " + fbm.getHeight() +
+				 * " " + rect.getWidth() + " " + rect.getHeight() + " " + angle
+				 * + " " + rect.getX() + " " + rect.getY()); if (rect.getWidth()
+				 * > 0.0 && rect.getHeight() > 0.0 && rect.getX() > 0.0 &&
+				 * rect.getY() > 0.0) { Crop crop = new Crop((int) rect.getX(),
+				 * (int) rect.getY(), (int) rect.getWidth(), (int)
+				 * rect.getHeight());
+				 * 
+				 * crop.ApplyInPlace(fbm); }
+				 */
 
 				filePath = File.createTempFile("inverted", ".png");
 
@@ -99,19 +109,24 @@ public class RequestSerializer implements Callable<JsonObject> {
 				Rotate rotate = new Rotate(-angle, true);
 				rotate.applyInPlace(fbm);
 
-			/*	filePath = File.createTempFile("beforerotate", ".png");
-				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
-
-				Rectangle rect = RectangleUtils.getLargestRectangle(fbm.getWidth(), fbm.getHeight(), angle, 0);
-
-				System.out.println(fbm.getWidth() + " " + fbm.getHeight() + " " + rect.getWidth() + " "
-						+ rect.getHeight() + " " + angle + " " + rect.getX() + " " + rect.getY());
-				if (rect.getWidth() > 0.0 && rect.getHeight() > 0.0 && rect.getX() > 0.0 && rect.getY() > 0.0) {
-					Crop crop = new Crop((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(),
-							(int) rect.getHeight());
-
-					crop.ApplyInPlace(fbm);
-				}*/
+				/*
+				 * filePath = File.createTempFile("beforerotate", ".png");
+				 * ImageIO.write(fbm.toBufferedImage(), "png", filePath);
+				 * 
+				 * Rectangle rect =
+				 * RectangleUtils.getLargestRectangle(fbm.getWidth(),
+				 * fbm.getHeight(), angle, 0);
+				 * 
+				 * System.out.println(fbm.getWidth() + " " + fbm.getHeight() +
+				 * " " + rect.getWidth() + " " + rect.getHeight() + " " + angle
+				 * + " " + rect.getX() + " " + rect.getY()); if (rect.getWidth()
+				 * > 0.0 && rect.getHeight() > 0.0 && rect.getX() > 0.0 &&
+				 * rect.getY() > 0.0) { Crop crop = new Crop((int) rect.getX(),
+				 * (int) rect.getY(), (int) rect.getWidth(), (int)
+				 * rect.getHeight());
+				 * 
+				 * crop.ApplyInPlace(fbm); }
+				 */
 				filePath = File.createTempFile("binary", ".png");
 
 				ImageIO.write(fbm.toBufferedImage(), "png", filePath);
@@ -145,6 +160,26 @@ public class RequestSerializer implements Callable<JsonObject> {
 		}
 
 		return null;
+
+	}
+
+	private String getFilePathFromURL(String img) {
+		String returnURL = img;
+		try {
+			System.out.println("Reading url:" + img);
+			URL url = new URL(img);
+			BufferedImage bif = ImageIO.read(url);
+			File f = File.createTempFile("fbimage", ".png");
+
+			ImageIO.write(bif, "png", f);
+			return f.getAbsolutePath();
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return returnURL;
 
 	}
 }
