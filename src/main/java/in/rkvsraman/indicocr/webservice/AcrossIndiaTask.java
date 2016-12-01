@@ -53,7 +53,7 @@ public class AcrossIndiaTask extends FutureTask<String> {
 			return;
 		}
 		System.out.println("Imagepath is:" + imagePath);
-		if(imagePath.length() > 0){
+		if( imagePath !=null && imagePath.length() > 0){
 			String recognizedtext = "recoed" + System.currentTimeMillis();
 
 			CommandLine tessCommand = new CommandLine("tesseract");
@@ -81,6 +81,10 @@ public class AcrossIndiaTask extends FutureTask<String> {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		else
+		{
+			routingContext.response().end("Could not complete the OCR process... aborting");
 		}
 		
 		

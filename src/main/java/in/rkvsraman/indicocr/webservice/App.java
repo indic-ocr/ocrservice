@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,10 +39,13 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
 public class App extends AbstractVerticle {
+	
+	public static Properties langProps = new Properties();
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 
+		langProps.load(App.class.getResourceAsStream("/tesseractpostprocessor/langcode.properties"));
 		JsonObject object = new JsonObject();
 		object.put("scribo_path", args[0]);
 		object.put("http.port", 8081);
@@ -54,6 +58,7 @@ public class App extends AbstractVerticle {
 	public void start(Future<Void> startFuture) throws Exception {
 		// TODO Auto-generated method stub
 
+		
 		System.out.println("ScriboPath:" + config().getString("scribo_path"));
 		startWebApp(startFuture);
 		System.out.println("Server started on :"+ config().getInteger("http.port"));
@@ -121,6 +126,10 @@ public class App extends AbstractVerticle {
 		// }
 
 		String lang = routingContext.request().getFormAttribute("lang");
+		if(!langProps.stringPropertyNames().contains(lang)){
+			routingContext.response().end("Language not supported.\n");
+			return;
+		}
 		String dpi = routingContext.request().getFormAttribute("dpi");
 		System.out.println("DPI is:"+ dpi);
 		if(dpi == null)
@@ -165,7 +174,15 @@ public class App extends AbstractVerticle {
 		// }
 
 		String sourcelang = routingContext.request().getFormAttribute("sourcelang");
+		if(!langProps.stringPropertyNames().contains(sourcelang)){
+			routingContext.response().end("Source language not supported.\n");
+			return;
+		}
 		String tolang = routingContext.request().getFormAttribute("tolang");
+		if(!langProps.stringPropertyNames().contains(tolang)){
+			routingContext.response().end("Target language not supported.\n");
+			return;
+		}
 		System.out.println("Lang:" + sourcelang + " " + tolang);
 		if (sourcelang == null || sourcelang.length() == 0) {
 			routingContext.response().end("No source language specified.\n");

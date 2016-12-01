@@ -41,6 +41,9 @@ public class AcrossIndiaStringTask extends FutureTask<JsonObject> {
 
 		try {
 			JsonObject parsedObject = get();
+			if(parsedObject == null){
+				routingContext.response().end("Could not complete OCR process ... aborting");
+			}
 
 			ExecuteWatchdog watchDog = new ExecuteWatchdog(60000); // Not more
 																	// than

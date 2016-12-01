@@ -40,7 +40,15 @@ public class RequestSerializer implements Callable<JsonObject> {
 			img = getFilePathFromURL(img);
 		}
 		String tolang = obj.getString("tolang");
+		if(!App.langProps.stringPropertyNames().contains(tolang)){
+			context.response().end("Target language not supported.\n");
+			return null;
+		}
 		String sourcelang = obj.getString("sourcelang");
+		if(!App.langProps.stringPropertyNames().contains(sourcelang)){
+			context.response().end("Source language not supported.\n");
+			return null;
+		}
 		String operation = obj.getString("operation");
 		String useEngine = obj.getString("engine");
 		// System.out.println("Lang:" + img + " " + tolang);

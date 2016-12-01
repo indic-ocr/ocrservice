@@ -52,10 +52,13 @@ public class ODTTask extends FutureTask<String> {
 			return;
 		}
 		
-		if(odtFilePath.length() > 0){
+		if(odtFilePath!= null && odtFilePath.length() > 0){
 			context.response().sendFile(odtFilePath);
 		}
-		
+		else
+		{
+			context.response().end("Could not convert to ODT file. Aborting...\n");
+		}
 		
 	}
 
