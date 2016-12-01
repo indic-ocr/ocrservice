@@ -124,18 +124,22 @@ public class TessHandler implements ExecuteResultHandler {
 
 	private void sendResponseText(String source) {
 		String sourceString = "";
-		if (sourcelang.equals("eng"))
-			sourceString = source;
-		else
-			sourceString = OCRPostProcessor.getProcessedString(sourcelang, source);
-
 		String toEnglish = "";
-		if (sourcelang.equals("eng"))
+		String transliteratedString = "";
+		if (sourcelang.equals("eng")) {
+			sourceString = source;
+		} else {
+			sourceString = OCRPostProcessor.getProcessedString(sourcelang, source);
+		}
+
+		if (sourcelang.equals("eng")) {
+
 			toEnglish = sourceString;
-		else
+		} else
 			toEnglish = VarnamUtils.getEnglishString(sourceString, sourcelang);
 		if (toEnglish != null && !tolang.equals("eng")) {
-			String transliteratedString = VarnamUtils.transliterate(toEnglish, tolang);
+			
+			 transliteratedString = VarnamUtils.transliterate(toEnglish, tolang);
 			JsonObject returnObject = new JsonObject();
 			returnObject.put("recognizedText", sourceString);
 			returnObject.put("englishTransliteration", toEnglish);
@@ -148,6 +152,7 @@ public class TessHandler implements ExecuteResultHandler {
 			JsonObject returnObject = new JsonObject();
 			returnObject.put("recognizedText", sourceString);
 			returnObject.put("englishTransliteration", toEnglish);
+			returnObject.put("tranliteratedTo", toEnglish);
 			returnObject.put("filePath", this.filePath);
 
 			System.out.println(returnObject.toString());
@@ -155,7 +160,7 @@ public class TessHandler implements ExecuteResultHandler {
 			context.response().end(returnObject.toString());
 
 		}
-//		checkForegroundAndBackground();
+		// checkForegroundAndBackground();
 
 	}
 

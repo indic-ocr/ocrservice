@@ -85,5 +85,12 @@ public class OCRPostProcessor {
 		}
 		return null;
 	}
+	
+	
+	public static boolean isLangSupported(String lang){
+		
+		return postProcessMap.containsKey(lang);
+		
+	}
 
 }
