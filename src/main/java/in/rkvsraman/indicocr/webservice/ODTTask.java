@@ -21,21 +21,21 @@ public class ODTTask extends FutureTask<String> {
 		super(callable);
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	public ODTTask(RoutingContext context, String filePath, File outputFile, CommandLine command, String language,
 			ODTConverter converter) {
 		super(converter);
 		this.context = context;
 		this.filePath = filePath;
 		this.outputFile = outputFile;
-		
+
 		this.command = command;
 		this.language = language;
 	}
 
 	@Override
 	protected void done() {
-		if(isCancelled()){
+		if (isCancelled()) {
 			context.response().end("Could not convert to ODT file. Aborting...\n");
 			return;
 		}
@@ -51,15 +51,14 @@ public class ODTTask extends FutureTask<String> {
 			e.printStackTrace();
 			return;
 		}
-		
-		if(odtFilePath!= null && odtFilePath.length() > 0){
+
+		if (odtFilePath != null && odtFilePath.length() > 0) {
 			context.response().sendFile(odtFilePath);
+		} else {
+			if (!context.response().ended())
+				context.response().end("Could not convert to ODT file. Aborting...\n");
 		}
-		else
-		{
-			context.response().end("Could not convert to ODT file. Aborting...\n");
-		}
-		
+
 	}
 
 }

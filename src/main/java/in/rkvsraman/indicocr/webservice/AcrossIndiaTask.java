@@ -19,24 +19,23 @@ public class AcrossIndiaTask extends FutureTask<String> {
 	private String filePath;
 	private String tolang;
 
-
 	public AcrossIndiaTask(Callable<String> callable) {
 		super(callable);
 		// TODO Auto-generated constructor stub
 	}
-	
-	
-	public AcrossIndiaTask(RoutingContext routingContext, String filePath, String sourcelang, String tolang, BinaryImageConverter converter){
+
+	public AcrossIndiaTask(RoutingContext routingContext, String filePath, String sourcelang, String tolang,
+			BinaryImageConverter converter) {
 		super(converter);
-		this.routingContext=routingContext;
-		this.filePath=filePath;
-		this.sourcelang= sourcelang;
-		this.tolang= tolang;
+		this.routingContext = routingContext;
+		this.filePath = filePath;
+		this.sourcelang = sourcelang;
+		this.tolang = tolang;
 	}
-	
+
 	@Override
 	protected void done() {
-		if(isCancelled()){
+		if (isCancelled()) {
 			routingContext.response().end("Could not convert to ODT file. Aborting...\n");
 			return;
 		}
@@ -53,7 +52,7 @@ public class AcrossIndiaTask extends FutureTask<String> {
 			return;
 		}
 		System.out.println("Imagepath is:" + imagePath);
-		if( imagePath !=null && imagePath.length() > 0){
+		if (imagePath != null && imagePath.length() > 0) {
 			String recognizedtext = "recoed" + System.currentTimeMillis();
 
 			CommandLine tessCommand = new CommandLine("tesseract");
@@ -69,8 +68,8 @@ public class AcrossIndiaTask extends FutureTask<String> {
 			DefaultExecutor executor = new DefaultExecutor();
 			executor.setWatchdog(watchDog);
 
-			TessHandler handler = new TessHandler(routingContext,imagePath, recognizedtext,
-					watchDog, tessCommand, sourcelang, tolang, TessHandler.TESSERACT_COMMAND);
+			TessHandler handler = new TessHandler(routingContext, imagePath, recognizedtext, watchDog, tessCommand,
+					sourcelang, tolang, TessHandler.TESSERACT_COMMAND);
 
 			try {
 				executor.execute(tessCommand, handler);
@@ -81,13 +80,11 @@ public class AcrossIndiaTask extends FutureTask<String> {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		} else {
+			if (!routingContext.response().ended())
+				routingContext.response().end("Could not complete the OCR process... aborting");
 		}
-		else
-		{
-			routingContext.response().end("Could not complete the OCR process... aborting");
-		}
-		
-		
+
 	}
 
 }

@@ -29,7 +29,6 @@ public class AcrossIndiaStringTask extends FutureTask<JsonObject> {
 		this.routingContext = routingContext;
 		this.config = config;
 
-		
 	}
 
 	@Override
@@ -41,8 +40,10 @@ public class AcrossIndiaStringTask extends FutureTask<JsonObject> {
 
 		try {
 			JsonObject parsedObject = get();
-			if(parsedObject == null){
-				routingContext.response().end("Could not complete OCR process ... aborting");
+			if (parsedObject == null) {
+				if (!routingContext.response().ended())
+					routingContext.response().end("Could not complete OCR process ... aborting");
+				return;
 			}
 
 			ExecuteWatchdog watchDog = new ExecuteWatchdog(60000); // Not more

@@ -2,8 +2,10 @@ package in.rkvsraman.indicocr.webservice;
 
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -39,13 +41,21 @@ public class RequestSerializer implements Callable<JsonObject> {
 		if (img.startsWith("https://")) { // Hack for fb messenger
 			img = getFilePathFromURL(img);
 		}
+		if (img.startsWith("data:")) { // Hack for chrome data url
+
+			img = getFilePathFromDataURL(img);
+			if(img == null){
+				context.response().end("Could not read image!!.\n");
+				return null;
+			}
+		}
 		String tolang = obj.getString("tolang");
-		if(!App.langProps.stringPropertyNames().contains(tolang)){
+		if (!App.langProps.stringPropertyNames().contains(tolang)) {
 			context.response().end("Target language not supported.\n");
 			return null;
 		}
 		String sourcelang = obj.getString("sourcelang");
-		if(!App.langProps.stringPropertyNames().contains(sourcelang)){
+		if (!App.langProps.stringPropertyNames().contains(sourcelang)) {
 			context.response().end("Source language not supported.\n");
 			return null;
 		}
@@ -60,12 +70,13 @@ public class RequestSerializer implements Callable<JsonObject> {
 
 				FastBitmap fbm = new FastBitmap(bufferedImage);
 
+				Grayscale grayscale = new Grayscale();
+				grayscale.applyInPlace(fbm);
 				Invert inv = new Invert();
 
 				inv.applyInPlace(fbm);
 
-				Grayscale grayscale = new Grayscale();
-				grayscale.applyInPlace(fbm);
+				ImageIO.write(fbm.toBufferedImage(), "png", File.createTempFile("invbefore", ".png"));
 
 				BradleyLocalThreshold bld = new BradleyLocalThreshold();
 				bld.applyInPlace(fbm);
@@ -169,6 +180,33 @@ public class RequestSerializer implements Callable<JsonObject> {
 
 		return null;
 
+	}
+
+	private String getFilePathFromDataURL(String img) {
+		// TODO Auto-generated method stub
+
+		System.out.println(img);
+		if(!img.startsWith("data:image"))
+			return null;
+		String base64Image = img.split(",")[1];
+		if (base64Image != null && base64Image.length() > 0) {
+			byte[] imageBytes = DatatypeConverter.parseBase64Binary(base64Image);
+
+			try {
+				File f = File.createTempFile("dimage", ".png");
+				BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(f));
+				bout.write(imageBytes);
+				bout.flush();
+				bout.close();
+				return f.getAbsolutePath();
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		return null;
 	}
 
 	private String getFilePathFromURL(String img) {
