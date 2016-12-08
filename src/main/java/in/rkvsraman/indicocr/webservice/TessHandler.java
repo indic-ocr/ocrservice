@@ -138,12 +138,17 @@ public class TessHandler implements ExecuteResultHandler {
 		} else
 			toEnglish = VarnamUtils.getEnglishString(sourceString, sourcelang);
 		if (toEnglish != null && !tolang.equals("eng")) {
-			
-			 transliteratedString = VarnamUtils.transliterate(toEnglish, tolang);
+
 			JsonObject returnObject = new JsonObject();
 			returnObject.put("recognizedText", sourceString);
 			returnObject.put("englishTransliteration", toEnglish);
-			returnObject.put("tranliteratedTo", transliteratedString);
+			if (sourcelang.equalsIgnoreCase(tolang)) {
+				returnObject.put("tranliteratedTo", sourceString);
+
+			} else {
+				transliteratedString = VarnamUtils.transliterate(toEnglish, tolang);
+				returnObject.put("tranliteratedTo", transliteratedString);
+			}
 			returnObject.put("filePath", this.filePath);
 			System.out.println(returnObject.toString());
 			context.response().end(returnObject.toString());
