@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>OCR Service by indic-ocr</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">OCR Service</h1>
+      <h2 class="project-tagline">OCR as a service </h2>
+      <a href="https://github.com/indic-ocr/ocrservice" class="btn">View on GitHub</a>
+      <a href="https://github.com/indic-ocr/ocrservice/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/indic-ocr/ocrservice/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h3>
+<a id="host-and-run-ocr-as-a-service-within-your-organisation-or-community" class="anchor" href="#host-and-run-ocr-as-a-service-within-your-organisation-or-community" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Host and run OCR as a service within your organisation or community.</h3>
+
+<p>OCR service is dependent on following:</p>
+
+<ol>
+<li><a href="http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html">Java</a></li>
+<li><a href="https://maven.apache.org/">Maven</a></li>
+<li><a href="https://indic-ocr.github.io/olena/">Olena</a></li>
+<li><a href="https://github.com/tesseract-ocr/tesseract">Tesseract</a></li>
+<li><a href="https://indic-ocr.github.io/tessdata/">Tessdata (for Indic scripts support)</a></li>
+</ol>
+
+<p>Checkout the code </p>
+
+<pre><code>git clone https://github.com/indic-ocr/ocrservice.git 
+</code></pre>
+
+<p>To compile and start the server use following command</p>
+
+<pre><code>mvn package  &amp;&amp; java -jar target/IndicOCR-jar-with-dependencies.jar &lt;path_to_olena&gt;/scribo/src/content_in_doc
+</code></pre>
+
+<p>On my local system it looks like this</p>
+
+<pre><code>mvn package  &amp;&amp; java -jar target/IndicOCR-jar-with-dependencies.jar ~/ocr/olena/olena/scribo/src/content_in_doc
+</code></pre>
+
+<p>The server start on port 8081 and exposes 3 webservice APIs</p>
+
+<ul>
+<li>
+<em>/ocr</em> which converts and image to an ODT file</li>
+<li>
+<em>/india</em> which converts an image to text using the scribo engine</li>
+<li>
+<em>/indiastring</em> which converts an image (uploaded, http url or data url)  using tesseract or scribo and can also do invert or binarization of image before passing it to OCR engine</li>
+</ul>
+
+<p>An experimental server is available on <a href="http://35.164.84.230:8081/">http://35.164.84.230:8081/</a>. All images are removed from the server at least once a day and <strong>they are not stored</strong></p>
+
+<h4>
+<a id="usage-examples" class="anchor" href="#usage-examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage Examples</h4>
+
+<p><em><em>/ocr</em></em>    </p>
+
+<pre><code>curl   -F "dpi=300"   -F "lang=eng"   -F "myfile=@&lt;path_to_image_file&gt;" http://35.164.84.230:8081/ocr
+</code></pre>
+
+<p><em><em>/india</em></em></p>
+
+<pre><code>curl   -F "tolang=eng"   -F "sourcelang=pan"   -F "myfile=@&lt;path_to_binarized_image&gt;" http://35.164.84.230:8081/india
+</code></pre>
+
+<p><em><em>/indiastring</em></em></p>
+
+<pre><code>curl -H "Content-Type: application/json" -X POST -d '{"filePath":"&lt;http url or data url &gt;", "sourcelang":"pan","tolang":"eng","operation":"invert","engine":"tesseract"}' http://35.164.84.230:8081/indiastring
+</code></pre>
+
+<ul>
+<li>Allowed operations are <em>normal, invert or binarize</em>
+</li>
+<li>Allowed values for engine are <em>tesseract or scribo</em>
+</li>
+<li>All language parameters need to be 3 letter codes ( <em>eg: eng for English, tam for Tamil</em>)</li>
+</ul>
+
+<h3>
+<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+
+<p><a href="https://github.com/rkvsraman" class="user-mention">@rkvsraman</a></p>
+
+<h3>
+<a id="help" class="anchor" href="#help" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Help</h3>
+
+<p>Please join the project and help by code contributions or by reporting bugs. </p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/indic-ocr/ocrservice">OCR Service</a> is maintained by <a href="https://github.com/indic-ocr">indic-ocr</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
